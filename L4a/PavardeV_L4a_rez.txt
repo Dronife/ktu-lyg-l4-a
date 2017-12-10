@@ -1,0 +1,15 @@
+
+REZULTATAI 
+
+Nr  Name                                               Amount     Price   
+0   PienasDuonaVarskeJogurtasDuona                     52         39.96   
+1   VarskeGrietineGrietineVarskePienas                 51         42.63   
+2   GrietineVarskePienasPienasVarske                   49         38.69   
+3   MajonezasPienasMajonezasGrietineGrietine           52         41.87   
+4   JogurtasDuonaDuonaDuonaJogurtas                    55         51.64   
+5   PienasGrietineVarskeJogurtasDuona                  53         38.62   
+6   VarskeVarskeGrietineVarskePienas                   52         41.76   
+7   GrietinePienasPienasPienasVarske                   46         41.00   
+8   MajonezasDuonaMajonezasGrietineGrietine            53         41.77   
+9   MajonezasGrietineDuonaDuonaJogurtas                53         52.50   
+10  JogurtasVarskeVarskeJogurtasDuona                  57         33.85   
