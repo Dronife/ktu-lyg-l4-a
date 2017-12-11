@@ -6,25 +6,28 @@
 #include <thrust/host_vector.h>
 #include <thrust/device_vector.h>
 
-#define count 11				//giju skaicius
-#define masyvuCount 5			//masyvu skaicius
+#define count 11 //giju skaicius
+#define masyvuCount 5	//masyvu skaicius
 
 struct Item
 {
-	char name[20 * count];	// pavadinimas
-	int amount;				// kiekis
-	int eilNr;				// eiles numeris masyve
-	double price;			// kaina
+	char name[20 * count];
+	int amount;
+	int eilNr; // eiles numeris masyve
+	double price;
 };
 
 struct Supplier {
-	struct Item items[count]; 		//prekiu masyvas
-	int itemCount;					//prekiu skaicius
-	char supplierName[20];			//tiekejo pavadinimas
+	struct Item items[count];
+	int itemCount;
+	char supplierName[20];
 };
 
-struct Supplier suppliers[masyvuCount]; //tiekeju masyvas
-struct Item bendras[count];				//bendras masyvas
+//tiekeju masyvas
+struct Supplier suppliers[masyvuCount];
+
+//bendras masyvas
+struct Item bendras[count];
 
 void readFile();
 void printFile(struct Item supplier[], int  itemCount);
@@ -95,27 +98,36 @@ __device__ char * cuda_strcat(char *dest, const char *src) {
 
 int main(int argc, char *argv[])
 {
-	readFile(); 					//failo skaitymas
-	printSuppliers(suppliers);		//duomenu spausdinimas
-	struct Supplier *s;				// tiekejai
-	struct Item *bendrasCuda;		//bendras
+	readFile();
+	// pradiniu duomenu spausdinimas
+	printSuppliers(suppliers);
+	// tiekejai
+	struct Supplier *s;
+	// bendras
+	struct Item *bendrasCuda;
 
-	cudaMalloc((void**)&s, sizeof(Supplier)*masyvuCount);	//atminties isskyrimas GPU
-	cudaMemcpy(s, suppliers, sizeof(Supplier)*masyvuCount, cudaMemcpyHostToDevice); // kopijavimas i GPU
+	//atminties isskyrimas GPU
+	cudaMalloc((void**)&s, sizeof(Supplier)*masyvuCount);
+	// kopijavimas i GPU
+	cudaMemcpy(s, suppliers, sizeof(Supplier)*masyvuCount, cudaMemcpyHostToDevice);
+	//atminities isskyrimas i GPU
+	cudaMalloc((void**)&bendrasCuda, sizeof(Item)*count);
+	//kopijavimas i GPU
+	cudaMemcpy(bendrasCuda, bendras, sizeof(Item)*count, cudaMemcpyHostToDevice);
 
-	cudaMalloc((void**)&bendrasCuda, sizeof(Item)*count);	//atminities isskyrimas i GPU
-	cudaMemcpy(bendrasCuda, bendras, sizeof(Item)*count, cudaMemcpyHostToDevice);	//kopijavimas i GPU
+	// giju skaiciaus parinkimas ir lygiagretaus kodo startavimas
+	addKernel << < 1, count >> >(s, bendrasCuda);
+	
+	// kopijavimas i CPU
+	cudaMemcpy(bendras, bendrasCuda, sizeof(Item)*count, cudaMemcpyDeviceToHost);
+	//atlaisvinimas atminties is GPU	
+	cudaFree((void**)&s);
+	//atlaisvinimas atminties is GPU
+	cudaFree((void**)&bendrasCuda);
 
-	addKernel << < 1, count >> >(s, bendrasCuda); 				// giju skaiciaus parinkimas ir lygiagretaus kodo startavimas
-
-	cudaMemcpy(bendras, bendrasCuda, sizeof(Item)*count, cudaMemcpyDeviceToHost); // kopijavimas i CPU
-	cudaFree((void**)&s); //atlaisvinimas atminties is GPU	
-	cudaFree((void**)&bendrasCuda); //atlaisvinimas atminties is GPU
-
-	printItemsResults(bendras, count); //rez spausdinimas
-	printFile(bendras, count);  // rez spausdinimas i faila
-	printf("PABAIGA \n");
-	system("pause");
+	printItemsResults(bendras, count);
+	printFile(bendras, count);
+	printf("Done \n");
 	return 0;
 }
 
@@ -161,13 +173,15 @@ void printItemsResults(struct Item supplier[], int  itemCount) {
 *	Skaitymas is failo
 */
 void readFile() {
-	errno_t err;							//klaidos
-	FILE *stream;							//failas
+	errno_t err;
+	FILE *stream;
 	char file_name[21] = "SankauskasS_L4.txt";  //failo vardas
 	err = fopen_s(&stream, file_name, "r");
-	char name[20];							//tiekejo pavadinimas
-	int n;									//prekiu skaicius
-	int supplierCount = 0;					//tiekejo iteracijos kintamasis
+	
+	char name[20];
+	int n; //prekiu skaicius
+	int supplierCount = 0; //tiekejo iteracijos kintamasis
+	
 	while (true) {
 		int readItems = fscanf(stream, "%s %d", name, &n);
 		if (readItems == 2) {
@@ -175,9 +189,9 @@ void readFile() {
 			suppliers[supplierCount].itemCount = n;
 			for (int i = 0; i < n; i++) {
 				struct Item item = suppliers[supplierCount].items[i];
-				char item_name[20];		//prekes pavadinimas
-				int amount;				//prekes kiekis
-				double price;			//prekes kaina
+				char item_name[20];
+				int amount;
+				double price;
 				fscanf(stream, "%s %d %lf", item_name, &amount, &price);
 				suppliers[supplierCount].items[i].amount = amount;
 				suppliers[supplierCount].items[i].eilNr = i;
